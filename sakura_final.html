@@ -1,0 +1,523 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Сакура - Азиатский Ресторан</title>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Noto+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --red:       #c0392b;
+            --dark-red:  #922b21;
+            --gold:      #d4a843;
+            --beige:     #f5f0e8;
+            --dark:      #1a0f0f;
+            --text:      #3d2b2b;
+            --card-bg:   #ffffff;
+            --shadow:    0 4px 16px rgba(0,0,0,0.10);
+        }
+
+        html { scroll-behavior: smooth; }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Noto Sans', sans-serif;
+            background-color: var(--beige);
+            color: var(--text);
+            line-height: 1.6;
+        }
+
+        /* ===== CANVAS АНИМАЦИЯ ===== */
+        #canvas {
+            position: fixed;
+            top: 0; left: 0; bottom: 0; right: 0;
+            z-index: 0;
+            pointer-events: none;
+            opacity: 0.18;
+        }
+
+        /* ===== ШАПКА ===== */
+        header {
+            background-color: var(--dark);
+            color: #fff;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.4);
+        }
+
+        .header-inner {
+            max-width: 1100px;
+            margin: 0 auto;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 16px 24px;
+        }
+
+        .logo { display: flex; align-items: center; gap: 12px; }
+        .logo-icon { font-size: 32px; }
+        .logo-text h1 {
+            font-family: 'Playfair Display', serif;
+            font-size: 24px;
+            color: var(--gold);
+            letter-spacing: 2px;
+        }
+        .logo-text p { font-size: 11px; color: #aaa; letter-spacing: 3px; text-transform: uppercase; }
+
+        nav a {
+            color: #ddd;
+            text-decoration: none;
+            margin-left: 24px;
+            font-size: 14px;
+            letter-spacing: 1px;
+            transition: color 0.2s;
+        }
+        nav a:hover { color: var(--gold); }
+
+        /* ===== ГЕРОЙ ===== */
+        .hero {
+            background: linear-gradient(135deg, var(--dark) 0%, #3d1010 60%, var(--dark-red) 100%);
+            color: #fff;
+            text-align: center;
+            padding: 80px 24px 60px;
+            position: relative;
+            overflow: hidden;
+            z-index: 1;
+        }
+        .hero::before { content: '🌸'; position: absolute; font-size: 200px; opacity: 0.05; top: -30px; left: -40px; }
+        .hero::after  { content: '🌸'; position: absolute; font-size: 200px; opacity: 0.05; bottom: -60px; right: -40px; }
+        .hero h2 { font-family: 'Playfair Display', serif; font-size: 42px; color: var(--gold); margin-bottom: 12px; }
+        .hero p  { font-size: 16px; color: #ccc; font-weight: 300; letter-spacing: 1px; }
+
+        /* ===== MAIN ===== */
+        main { max-width: 1100px; margin: 0 auto; padding: 40px 24px 60px; position: relative; z-index: 1; }
+
+        .menu-section { margin-bottom: 56px; }
+
+        .section-title { display: flex; align-items: center; gap: 14px; margin-bottom: 28px; }
+        .section-title .icon { font-size: 28px; }
+        .section-title h3 {
+            font-family: 'Playfair Display', serif;
+            font-size: 26px;
+            color: var(--dark-red);
+            border-bottom: 2px solid var(--gold);
+            padding-bottom: 4px;
+        }
+
+        .cards-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+        }
+
+        /* ===== КАРТОЧКА ===== */
+        .card {
+            background: var(--card-bg);
+            border-radius: 12px;
+            box-shadow: var(--shadow);
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            border-left: 4px solid var(--red);
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .card:hover { transform: translateY(-4px); box-shadow: 0 8px 24px rgba(0,0,0,0.15); }
+
+        .card-header { display: flex; justify-content: space-between; align-items: flex-start; }
+        .card-name  { font-family: 'Playfair Display', serif; font-size: 18px; color: var(--dark); font-weight: 700; }
+        .card-price { background: var(--red); color: #fff; padding: 4px 12px; border-radius: 20px; font-size: 14px; font-weight: 500; white-space: nowrap; }
+        .card-desc  { font-size: 13px; color: #777; font-weight: 300; }
+
+        .card-tags { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 4px; }
+        .tag { font-size: 11px; padding: 2px 8px; border-radius: 20px; background: var(--beige); color: var(--text); border: 1px solid #ddd; }
+        .tag.spicy   { background: #fde8e8; border-color: var(--red); color: var(--red); }
+        .tag.popular { background: #fef9e7; border-color: var(--gold); color: #a07800; }
+        .tag.veg     { background: #e8f8e8; border-color: #27ae60; color: #1e8449; }
+
+        .divider { border: none; border-top: 1px dashed #ddd; margin: 40px 0; }
+
+        /* ===== О НАС ===== */
+        .about-section {
+            background: linear-gradient(135deg, #1a0f0f 0%, #2d1414 50%, #1a0f0f 100%);
+            padding: 80px 24px;
+            position: relative;
+            overflow: hidden;
+            z-index: 1;
+        }
+
+        .about-section::before {
+            content: '🌸';
+            position: absolute;
+            font-size: 300px;
+            opacity: 0.03;
+            top: -60px;
+            right: -60px;
+            pointer-events: none;
+        }
+
+        .about-inner {
+            max-width: 1100px;
+            margin: 0 auto;
+            display: flex;
+            align-items: center;
+            gap: 60px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .about-socials { display: flex; flex-direction: column; gap: 20px; }
+
+        .social-card {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            padding: 18px 28px;
+            border-radius: 16px;
+            text-decoration: none;
+            font-size: 15px;
+            font-weight: 500;
+            letter-spacing: 1px;
+            transition: transform 0.2s, box-shadow 0.2s;
+            min-width: 200px;
+        }
+        .social-card:hover { transform: translateY(-4px); box-shadow: 0 12px 32px rgba(0,0,0,0.4); }
+        .social-card.instagram { background: linear-gradient(135deg, #833ab4, #fd1d1d, #fcb045); color: #fff; }
+        .social-card.tiktok    { background: #010101; color: #fff; border: 1px solid #333; }
+
+        .social-icon { width: 32px; height: 32px; flex-shrink: 0; }
+        .social-icon svg { width: 100%; height: 100%; }
+        .social-label { font-size: 16px; font-weight: 600; }
+
+        .about-text { text-align: center; color: #fff; }
+
+        .about-logo-line {
+            font-size: 52px;
+            margin-bottom: 12px;
+            animation: pulse 2.5s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50%       { transform: scale(1.12); }
+        }
+
+        .about-title { font-family: 'Playfair Display', serif; font-size: 36px; color: #fff; margin-bottom: 16px; line-height: 1.2; }
+        .about-title span { color: var(--gold); }
+        .about-desc { font-size: 15px; color: #bbb; font-weight: 300; max-width: 380px; line-height: 1.8; }
+
+        /* ===== ФУТЕР / КОНТАКТЫ ===== */
+        footer {
+            background: #0d0707;
+            color: #aaa;
+            position: relative;
+            z-index: 1;
+        }
+
+        .footer-inner {
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 56px 24px 32px;
+            display: flex;
+            gap: 48px;
+            flex-wrap: wrap;
+            justify-content: space-between;
+        }
+
+        .footer-col { display: flex; flex-direction: column; gap: 10px; }
+
+        .footer-logo { font-family: 'Playfair Display', serif; font-size: 24px; color: var(--gold); letter-spacing: 2px; }
+        .footer-logo span { color: var(--gold); }
+        .footer-sub { font-size: 11px; letter-spacing: 3px; text-transform: uppercase; color: #555; }
+
+        .footer-heading { font-family: 'Playfair Display', serif; font-size: 16px; color: #fff; margin-bottom: 4px; letter-spacing: 1px; }
+
+        .footer-phone {
+            font-size: 22px;
+            font-weight: 600;
+            color: var(--gold);
+            text-decoration: none;
+            letter-spacing: 1px;
+            transition: color 0.2s;
+        }
+        .footer-phone:hover { color: #25D366; }
+
+        .footer-note { font-size: 12px; color: #555; }
+
+        .hours-badge {
+            display: inline-block;
+            background: linear-gradient(135deg, var(--dark-red), var(--red));
+            color: #fff;
+            padding: 8px 20px;
+            border-radius: 30px;
+            font-size: 18px;
+            font-weight: 700;
+            letter-spacing: 2px;
+            margin-bottom: 6px;
+        }
+
+        .footer-bottom {
+            border-top: 1px solid #1e1e1e;
+            text-align: center;
+            padding: 20px 24px;
+            font-size: 12px;
+            color: #444;
+        }
+        .footer-bottom span { color: var(--gold); }
+
+        /* ===== АДАПТИВ ===== */
+        @media (max-width: 640px) {
+            .hero h2       { font-size: 28px; }
+            nav            { display: none; }
+            .cards-grid    { grid-template-columns: 1fr; }
+            .about-inner   { flex-direction: column; gap: 40px; }
+            .about-title   { font-size: 26px; }
+            .footer-inner  { flex-direction: column; gap: 32px; }
+            .about-socials { flex-direction: row; flex-wrap: wrap; justify-content: center; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Анимация фон -->
+    <canvas id="canvas"></canvas>
+
+    <!-- ШАПКА -->
+    <header>
+        <div class="header-inner">
+            <div class="logo">
+                <div class="logo-icon">🌸</div>
+                <div class="logo-text">
+                    <h1>Сакура</h1>
+                    <p>Asian Restaurant</p>
+                </div>
+            </div>
+            <nav>
+                <a href="#home">Главная</a>
+                <a href="#menu">Меню</a>
+                <a href="#about">О нас</a>
+                <a href="#contacts">Контакты</a>
+            </nav>
+        </div>
+    </header>
+
+    <!-- ГЕРОЙ -->
+    <div class="hero" id="home">
+        <h2>Наше Меню</h2>
+        <p>Блюда азиатской кухни — суши, рамен, вок и многое другое</p>
+    </div>
+
+    <!-- МЕНЮ -->
+    <main id="menu">
+
+        <!-- СУПЫ -->
+        <section class="menu-section">
+            <div class="section-title">
+                <span class="icon">🍜</span>
+                <h3>Супы</h3>
+            </div>
+            <div class="cards-grid">
+                <div class="card">
+                    <div class="card-header">
+                        <span class="card-name">Рамен классический</span>
+                        <span class="card-price">350 сом</span>
+                    </div>
+                    <p class="card-desc">Пшеничная лапша в насыщенном бульоне с яйцом, нори и зелёным луком</p>
+                    <div class="card-tags"><span class="tag popular">⭐ Популярное</span></div>
+                </div>
+                <div class="card">
+                    <div class="card-header">
+                        <span class="card-name">Том Ям</span>
+                        <span class="card-price">420 сом</span>
+                    </div>
+                    <p class="card-desc">Тайский суп с креветками, грибами, лемонграссом и кокосовым молоком</p>
+                    <div class="card-tags">
+                        <span class="tag spicy">🌶 Острое</span>
+                        <span class="tag popular">⭐ Популярное</span>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="card-header">
+                        <span class="card-name">Мисо суп</span>
+                        <span class="card-price">180 сом</span>
+                    </div>
+                    <p class="card-desc">Традиционный японский суп с тофу, водорослями вакаме и луком</p>
+                    <div class="card-tags"><span class="tag veg">🌿 Вегетарианское</span></div>
+                </div>
+            </div>
+        </section>
+
+        <hr class="divider">
+
+        <!-- ГОРЯЧИЕ БЛЮДА -->
+        <section class="menu-section">
+            <div class="section-title">
+                <span class="icon">🍛</span>
+                <h3>Горячие блюда</h3>
+            </div>
+            <div class="cards-grid">
+                <div class="card">
+                    <div class="card-header">
+                        <span class="card-name">Курица Терияки</span>
+                        <span class="card-price">480 сом</span>
+                    </div>
+                    <p class="card-desc">Куриное филе в соусе терияки, подаётся с рисом и овощами на пару</p>
+                    <div class="card-tags"><span class="tag popular">⭐ Популярное</span></div>
+                </div>
+                <div class="card">
+                    <div class="card-header">
+                        <span class="card-name">Вок с говядиной</span>
+                        <span class="card-price">520 сом</span>
+                    </div>
+                    <p class="card-desc">Говядина с болгарским перцем, брокколи и соусом устричным</p>
+                    <div class="card-tags"><span class="tag spicy">🌶 Острое</span></div>
+                </div>
+                <div class="card">
+                    <div class="card-header">
+                        <span class="card-name">Жареный рис с яйцом</span>
+                        <span class="card-price">290 сом</span>
+                    </div>
+                    <p class="card-desc">Рис на воке с яйцом, морковью, горошком и соевым соусом</p>
+                    <div class="card-tags"><span class="tag veg">🌿 Вегетарианское</span></div>
+                </div>
+                <div class="card">
+                    <div class="card-header">
+                        <span class="card-name">Пад Тай</span>
+                        <span class="card-price">440 сом</span>
+                    </div>
+                    <p class="card-desc">Рисовая лапша с креветками, арахисом, яйцом и соусом тамаринд</p>
+                    <div class="card-tags"><span class="tag popular">⭐ Популярное</span></div>
+                </div>
+            </div>
+        </section>
+
+        <hr class="divider">
+
+        <!-- СУШИ И РОЛЛЫ -->
+        <section class="menu-section">
+            <div class="section-title">
+                <span class="icon">🍣</span>
+                <h3>Суши и роллы</h3>
+            </div>
+            <div class="cards-grid">
+                <div class="card">
+                    <div class="card-header">
+                        <span class="card-name">Филадельфия</span>
+                        <span class="card-price">580 сом</span>
+                    </div>
+                    <p class="card-desc">Ролл с лососем, сливочным сыром и огурцом</p>
+                    <div class="card-tags"><span class="tag popular">⭐ Популярное</span></div>
+                </div>
+                <div class="card">
+                    <div class="card-header">
+                        <span class="card-name">Дракон</span>
+                        <span class="card-price">620 сом</span>
+                    </div>
+                    <p class="card-desc">Темпура с креветкой, авокадо, унаги соусом</p>
+                    <div class="card-tags">
+                        <span class="tag spicy">🌶 Острое</span>
+                        <span class="tag popular">⭐ Популярное</span>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="card-header">
+                        <span class="card-name">Вегетарианский ролл</span>
+                        <span class="card-price">320 сом</span>
+                    </div>
+                    <p class="card-desc">Огурец, авокадо, морковь, маринованный дайкон</p>
+                    <div class="card-tags"><span class="tag veg">🌿 Вегетарианское</span></div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- О НАС -->
+    <section class="about-section" id="about">
+        <div class="about-inner">
+            <div class="about-socials">
+                <a href="https://www.instagram.com/bilal08umar/" target="_blank" class="social-card instagram">
+                    <div class="social-icon">
+                        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <rect x="2" y="2" width="20" height="20" rx="5" stroke="currentColor" stroke-width="1.8"/>
+                            <circle cx="12" cy="12" r="4.5" stroke="currentColor" stroke-width="1.8"/>
+                            <circle cx="17.5" cy="6.5" r="1" fill="currentColor"/>
+                        </svg>
+                    </div>
+                    <span class="social-label">Instagram</span>
+                </a>
+                <a href="https://www.instagram.com/bilal08umar/" target="_blank" class="social-card tiktok">
+                    <div class="social-icon">
+                        <svg viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-2.88 2.5 2.89 2.89 0 0 1-2.89-2.89 2.89 2.89 0 0 1 2.89-2.89c.28 0 .54.04.79.1V9.01a6.3 6.3 0 0 0-.79-.05 6.34 6.34 0 0 0-6.34 6.34 6.34 6.34 0 0 0 6.34 6.34 6.34 6.34 0 0 0 6.33-6.34V8.69a8.18 8.18 0 0 0 4.78 1.52V6.75a4.85 4.85 0 0 1-1.01-.06z"/>
+                        </svg>
+                    </div>
+                    <span class="social-label">TikTok</span>
+                </a>
+            </div>
+            <div class="about-text">
+                <div class="about-logo-line">🌸</div>
+                <h2 class="about-title">Restaurant <span>"Sakura"</span>.kg</h2>
+                <p class="about-desc">Мы — место, где азиатская кухня встречается с душевной атмосферой. Каждое блюдо готовится с любовью и уважением к традициям.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- КОНТАКТЫ -->
+    <footer id="contacts">
+        <div class="footer-inner">
+            <div class="footer-col">
+                <div class="footer-logo">🌸 <span>Сакура</span></div>
+                <p class="footer-sub">Asian Restaurant</p>
+            </div>
+            <div class="footer-col">
+                <h4 class="footer-heading">Контакты</h4>
+                <a href="https://wa.me/996505081118" target="_blank" class="footer-phone">+996 505 08 11 18</a>
+                <p class="footer-note">💬 Нажми — откроет WhatsApp</p>
+            </div>
+            <div class="footer-col">
+                <h4 class="footer-heading">Время работы</h4>
+                <div class="footer-hours">
+                    <span class="hours-badge">🕐 24 / 7</span>
+                    <p class="footer-note">Открыты каждый день,<br>круглосуточно</p>
+                </div>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <p>© 2025 Restaurant <span>"Sakura"</span>.kg — Все права защищены.</p>
+        </div>
+    </footer>
+
+    <!-- JAVASCRIPT — анимация фона -->
+    <script type="module">
+        import TubesCursor from "https://cdn.jsdelivr.net/npm/threejs-components@0.0.19/build/cursors/tubes1.min.js"
+
+        const app = TubesCursor(document.getElementById('canvas'), {
+            tubes: {
+                colors: ["#f967fb", "#53bc28", "#6958d5"],
+                lights: {
+                    intensity: 200,
+                    colors: ["#83f36e", "#fe8a2e", "#ff008a", "#60aed5"]
+                }
+            }
+        })
+
+        // Клик меняет цвета анимации
+        document.body.addEventListener('click', () => {
+            const colors = randomColors(3)
+            const lightsColors = randomColors(4)
+            app.tubes.setColors(colors)
+            app.tubes.setLightsColors(lightsColors)
+        })
+
+        function randomColors(count) {
+            return new Array(count)
+                .fill(0)
+                .map(() => "#" + Math.floor(Math.random() * 16777215).toString(16).padStart(6, '0'))
+        }
+    </script>
+
+</body>
+</html>
